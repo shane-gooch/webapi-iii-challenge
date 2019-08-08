@@ -13,7 +13,7 @@ server.use(function(req, res, next) {
 });
 
 server.get("/", (req, res) => {
-  res.status(200).json({ environment: "Local Machine" });
+  res.status(200).json({ environment: process.env.environment });
 });
 
 module.exports = server;
