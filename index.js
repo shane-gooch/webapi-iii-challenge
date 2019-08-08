@@ -21,4 +21,6 @@ server.use("/api/users", PostRouter);
 server.use(function(req, res) {
   res.status(404).send("<h1>You messed up, this URL does not exist...</h1>");
 });
-server.listen(5000, () => console.log("Api is running on 5000"));
+
+const port = process.env.PORT || 5000;
+server.listen(port, () => console.log(`Api is running on ${port}`));
