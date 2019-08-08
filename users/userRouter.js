@@ -4,10 +4,13 @@ const Posts = require("../posts/postDb.js");
 
 router.post("/", validateUser, (req, res) => {
   const newUser = req.body;
-
-  Users.insertUser(newUser).then(newUser => {
-    res.status(201).json(newUser);
-  });
+  Users.insertUser(newUser)
+    .then(newUser => {
+      res.status(201).json(newUser);
+    })
+    .catch(err => {
+      res.status(500).json({ errorMessage: "Could not add user to databaes" });
+    });
 });
 
 router.post("/:id/posts", validateUserId, validatePost, (req, res) => {
@@ -24,69 +27,101 @@ router.post("/:id/posts", validateUserId, validatePost, (req, res) => {
 });
 
 router.get("/", (req, res) => {
-  Users.get().then(users => {
-    res.status(200).json(users);
-  });
+  Users.get()
+    .then(users => {
+      res.status(200).json(users);
+    })
+    .catch(err => {
+      res
+        .status(500)
+        .json({ errorMessage: "Could not get users from database" });
+    });
 });
 
 router.get("/:id", validateUserId, (req, res) => {
   const { id } = req.params;
-  Users.getById(id).then(user => {
-    res.status(200).json(user);
-  });
+  Users.getById(id)
+    .then(user => {
+      res.status(200).json(user);
+    })
+    .catch(err => {
+      res
+        .status(500)
+        .json({ errorMessage: "Could not get user from database" });
+    });
 });
 
 router.get("/:id/posts", validateUserId, (req, res) => {
   const { id } = req.params;
-  Users.getUserPosts(id).then(userPosts => {
-    res.status(200).json(userPosts);
-  });
+  Users.getUserPosts(id)
+    .then(userPosts => {
+      res.status(200).json(userPosts);
+    })
+    .catch(err => {
+      res
+        .status(500)
+        .json({ errorMessage: "Could not get users post from database" });
+    });
 });
 
 router.delete("/:id", validateUserId, (req, res) => {
   const { id } = req.params;
-  Users.remove(id).then(id => {
-    res.status(200).json({ message: "The post has been deleted! " });
-  });
+  Users.remove(id)
+    .then(id => {
+      res.status(200).json({ errorMessage: "The post has been deleted! " });
+    })
+    .catch(err => {
+      res
+        .status(500)
+        .json({ errorMessage: "Could not delete user from database" });
+    });
 });
 
 router.put("/:id", validateUserId, validateUser, (req, res) => {
   const { id } = req.params;
   const changes = req.body;
-  Users.getById(id).then(user => {
-    console.log(user);
-    if (user) {
-      Users.update(id, changes).then(updated => {
-        Users.getById(id).then(updatedUser => {
-          res.status(200).json(updatedUser);
+  Users.getById(id)
+    .then(user => {
+      console.log(user);
+      if (user) {
+        Users.update(id, changes).then(updated => {
+          Users.getById(id).then(updatedUser => {
+            res.status(200).json(updatedUser);
+          });
         });
+      } else {
+        res.status(400).json({ error: "The specified ID does not exist" });
+      }
+    })
+    .catch(err => {
+      res.status(err => {
+        res
+          .status(400)
+          .json({ errorMessage: "Could not update user in database" });
       });
-    } else {
-      res.status(400).json({ error: "The specified ID does not exist" });
-    }
-  });
+    });
 });
 
 //custom middleware
 
 function validateUserId(req, res, next) {
   const id = req.params.id;
-  Users.getById(id).then(userInfo => {
-    if (userInfo) {
-      req.user = userInfo;
-    } else {
-      res.status(400).json({ message: "Invalid user id" });
-    }
-  });
+
+  Users.getById(id)
+    .then(userInfo => {
+      if (userInfo) {
+        req.user = userInfo;
+      } else {
+        res.status(400).json({ message: "Invalid user id" });
+      }
+    })
+    .catch(next);
   next();
 }
 
 function validateUser(req, res, next) {
   const user = req.body;
   console.log(user);
-  if (!user.hasOwnProperty("id")) {
-    return res.status(400).json({ message: "Missing user data" });
-  }
   if (!user.name) {
     return res.status(400).json({ message: "Missing required name field" });
   }
@@ -95,10 +130,7 @@ function validateUser(req, res, next) {
 
 function validatePost(req, res, next) {
   const post = req.body;
-  console.log(post);
-  if (!post.hasOwnProperty("id")) {
-    return res.status(400).json({ message: "Missing post data" });
-  }
+
   if (!post.text) {
     return res.status(400).json({ message: "Missing required text field" });
   }
