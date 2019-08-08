@@ -6,7 +6,6 @@ router.post("/", validateUser, (req, res) => {
   const newUser = req.body;
 
   Users.insertUser(newUser).then(newUser => {
-    console.log(newUser);
     res.status(201).json(newUser);
   });
 });
@@ -15,9 +14,13 @@ router.post("/:id/posts", validateUserId, validatePost, (req, res) => {
   const user_id = req.params.id;
   const text = req.body.text;
   const PostInto = { user_id, text };
-  Posts.insertPost(PostInto).then(newPost => {
-    res.status(201).json(newPost);
-  });
+  Posts.insertPost(PostInto)
+    .then(newPost => {
+      res.status(201).json(newPost);
+    })
+    .catch(err => {
+      res.status(500).json({ message: "Could not add post to database" });
+    });
 });
 
 router.get("/", (req, res) => {
@@ -81,7 +84,7 @@ function validateUserId(req, res, next) {
 function validateUser(req, res, next) {
   const user = req.body;
   console.log(user);
-  if (!user) {
+  if (!user.hasOwnProperty("id")) {
     return res.status(400).json({ message: "Missing user data" });
   }
   if (!user.name) {
@@ -93,7 +96,7 @@ function validateUser(req, res, next) {
 function validatePost(req, res, next) {
   const post = req.body;
   console.log(post);
-  if (!post) {
+  if (!post.hasOwnProperty("id")) {
     return res.status(400).json({ message: "Missing post data" });
   }
   if (!post.text) {
